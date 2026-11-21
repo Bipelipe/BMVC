@@ -3,14 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Foco OO | Plano de estudos</title>
+    <title>Foco Time | Plano de estudos</title>
     <link rel="stylesheet" href="/static/css/foco.css">
     <script src="/static/js/foco.js" defer></script>
 </head>
 <body>
     <header class="topbar">
         <div class="shell topbar-content">
-            <a class="brand" href="/foco">Foco OO</a>
+            <a class="brand" href="/foco">Foco Time</a>
             <nav aria-label="Nesta página">
                 <a href="#plano">Plano semanal</a>
                 <a href="#cronometro">Cronômetro</a>
