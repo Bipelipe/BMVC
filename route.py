@@ -3,11 +3,13 @@ from pathlib import Path
 from bottle import Bottle, redirect, static_file
 
 from app.controllers.application import Application
+from app.models.atividade import Atividades
 
-STATIC_ROOT = Path(__file__).resolve().parent / "app" / "static"
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_ROOT = BASE_DIR / "app" / "static"
 
 app = Bottle()
-controller = Application()
+controller = Application(Atividades(BASE_DIR / "instance" / "foco.sqlite3"))
 
 
 @app.get("/")
@@ -18,6 +20,13 @@ def index():
 @app.get("/foco")
 def foco():
     return controller.foco()
+
+
+app.get("/atividades/nova", callback=controller.nova)
+app.post("/atividades", callback=controller.criar)
+app.get("/atividades/<atividade_id:int>/editar", callback=controller.editar)
+app.post("/atividades/<atividade_id:int>/editar", callback=controller.atualizar)
+app.post("/atividades/<atividade_id:int>/excluir", callback=controller.excluir)
 
 
 @app.get("/static/<filepath:path>")
