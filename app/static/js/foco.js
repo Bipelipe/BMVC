@@ -65,3 +65,11 @@ resetButton.addEventListener("click", () => {
 
 toggleButton.disabled = false;
 resetButton.disabled = false;
+
+document.querySelectorAll(".activity-remove").forEach((form) => {
+    form.addEventListener("submit", (event) => {
+        if (!window.confirm("Excluir esta atividade do plano?")) {
+            event.preventDefault();
+        }
+    });
+});

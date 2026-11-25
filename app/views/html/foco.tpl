@@ -27,44 +27,31 @@
 
         <div class="study-layout">
             <section class="plan" id="plano" aria-labelledby="plano-titulo">
-                <h2 id="plano-titulo">Plano semanal</h2>
-                <ul class="activities">
-                    <li>
-                        <p class="day">Segunda</p>
-                        <div>
-                            <h3>Classes e objetos</h3>
-                            <p>Crie uma classe <code>Livro</code> e instancie dois livros com títulos diferentes.</p>
-                        </div>
-                    </li>
-                    <li>
-                        <p class="day">Terça</p>
-                        <div>
-                            <h3>Encapsulamento</h3>
-                            <p>Defina como uma conta bancária valida depósitos e saques.</p>
-                        </div>
-                    </li>
-                    <li>
-                        <p class="day">Quarta</p>
-                        <div>
-                            <h3>Herança</h3>
-                            <p>Crie classes <code>Bicicleta</code> e <code>Carro</code> que herdem de <code>Veiculo</code>.</p>
-                        </div>
-                    </li>
-                    <li>
-                        <p class="day">Quinta</p>
-                        <div>
-                            <h3>Polimorfismo</h3>
-                            <p>Implemente o método <code>area()</code> em um retângulo e em um círculo.</p>
-                        </div>
-                    </li>
-                    <li>
-                        <p class="day">Sexta</p>
-                        <div>
-                            <h3>Revisão prática</h3>
-                            <p>Releia os exercícios e explique a decisão de design de cada um.</p>
-                        </div>
-                    </li>
-                </ul>
+                <div class="plan-heading">
+                    <h2 id="plano-titulo">Plano semanal</h2>
+                    <a class="action-primary" href="/atividades/nova">Nova atividade</a>
+                </div>
+                % if atividades:
+                    <ul class="activities">
+                        % for atividade in atividades:
+                            <li>
+                                <p class="day">{{atividade.dia}}</p>
+                                <div class="activity-content">
+                                    <h3>{{atividade.titulo}}</h3>
+                                    <p>{{atividade.descricao}}</p>
+                                    <div class="activity-actions">
+                                        <a href="/atividades/{{atividade.id}}/editar" aria-label="Editar {{atividade.titulo}}">Editar</a>
+                                        <form class="activity-remove" method="post" action="/atividades/{{atividade.id}}/excluir">
+                                            <button type="submit" aria-label="Excluir {{atividade.titulo}}">Excluir</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </li>
+                        % end
+                    </ul>
+                % else:
+                    <p class="empty-plan">Seu plano está vazio. Crie uma atividade para começar.</p>
+                % end
             </section>
 
             <section class="timer" id="cronometro" aria-labelledby="timer-titulo">

@@ -151,3 +151,83 @@ h3 { font-size: 1rem; }
 @media (max-width: 420px) {
     .activities li { grid-template-columns: 1fr; gap: .2rem; }
 }
+
+.plan-heading, .activity-actions, .form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.plan-heading { justify-content: space-between; }
+
+.action-primary {
+    display: inline-block;
+    border: 1px solid #254b38;
+    border-radius: .5rem;
+    padding: .5rem .85rem;
+    background: #254b38;
+    color: #fffdf6;
+    font: inherit;
+    font-weight: 650;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.action-primary:hover { background: #173928; }
+
+.activity-content {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.activity-content > p { white-space: pre-line; }
+
+.activity-actions {
+    margin-top: .5rem;
+    font-size: .9rem;
+}
+
+.activity-actions a, .activity-remove button, .form-actions a {
+    text-decoration: underline;
+    text-underline-offset: .2em;
+}
+
+.activity-remove button {
+    border: 0;
+    padding: .15rem 0;
+    background: transparent;
+    color: #942e24;
+    font: inherit;
+    cursor: pointer;
+}
+
+.empty-plan { margin-top: 1rem; }
+.form-page { padding-block: clamp(1.5rem, 6vw, 4rem); }
+.form-panel { max-width: 38rem; margin-inline: auto; }
+
+.form-panel h1 {
+    max-width: none;
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+}
+
+.activity-form { display: grid; gap: 1.2rem; }
+.form-panel > .field-error { margin-bottom: 1rem; }
+.form-field { display: grid; gap: .35rem; }
+.form-field label { font-weight: 650; }
+
+.form-field :is(input, select, textarea) {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #818b7d;
+    border-radius: .4rem;
+    padding: .55rem .65rem;
+    background: #fff;
+    color: #202c24;
+    font: inherit;
+}
+
+.form-field textarea { resize: vertical; }
+.form-field [aria-invalid="true"] { border-color: #942e24; }
+.field-error { color: #942e24; }
+.field-hint { font-size: .875rem; color: #435347; }
