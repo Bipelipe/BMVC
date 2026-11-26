@@ -1,89 +1,86 @@
-import hashlib
 import hmac
 import secrets
-import sqlite3
-import time
-from contextlib import closing
+from functools import wraps
+from pathlib import Path
+
+from bottle import abort, redirect, request, response, template
+
+from app.models.usuario import DURACAO_SESSAO
+
+VIEWS_ROOT = Path(__file__).resolve().parents[1] / "views" / "html"
+COOKIE_SESSAO = "foco_sessao"
+COOKIE_CSRF = "foco_csrf"
 
 
-DURACAO_SESSAO = 8 * 60 * 60
+class Autenticacao:
+    def __init__(self, usuarios):
+        self.usuarios = usuarios
 
+    def _cookie(self, nome, valor, duracao):
+        response.set_cookie(
+            nome, valor, max_age=duracao, path="/", httponly=True,
+            secure=request.urlparts.scheme == "https", samesite="Strict",
+        )
 
-def _hash_senha(senha, sal):
-    return hashlib.pbkdf2_hmac("sha256", senha.encode("utf-8"), sal, 600_000)
-
-
-def _hash_token(token):
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()
-
-
-class Usuarios:
-    def __init__(self, caminho):
-        self.caminho = caminho
-        caminho.parent.mkdir(parents=True, exist_ok=True)
-        with closing(self._conectar()) as db, db:
-            db.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios (
-                    nome TEXT PRIMARY KEY,
-                    sal BLOB NOT NULL,
-                    senha_hash BLOB NOT NULL
-                )
-            """)
-            db.execute("""
-                CREATE TABLE IF NOT EXISTS sessoes (
-                    token_hash TEXT PRIMARY KEY,
-                    usuario TEXT NOT NULL,
-                    expira_em INTEGER NOT NULL
-                )
-            """)
-
-    def _conectar(self):
-        return sqlite3.connect(self.caminho)
-
-    def criar(self, nome, senha):
-        sal = secrets.token_bytes(16)
-        senha_hash = _hash_senha(senha, sal)
-        with closing(self._conectar()) as db, db:
-            resultado = db.execute(
-                "INSERT INTO usuarios (nome, sal, senha_hash) VALUES (?, ?, ?) "
-                "ON CONFLICT (nome) DO NOTHING",
-                (nome, sal, senha_hash),
-            )
-            return resultado.rowcount == 1
-
-    def autenticar(self, nome, senha):
-        with closing(self._conectar()) as db:
-            linha = db.execute(
-                "SELECT sal, senha_hash FROM usuarios WHERE nome = ?", (nome,)
-            ).fetchone()
-
-        sal, esperado = linha if linha else (bytes(16), bytes(32))
-        confere = hmac.compare_digest(_hash_senha(senha, sal), esperado)
-        return linha is not None and confere
-
-    def abrir_sessao(self, nome):
+    def _novo_csrf(self):
         token = secrets.token_urlsafe(32)
-        agora = int(time.time())
-        with closing(self._conectar()) as db, db:
-            db.execute("DELETE FROM sessoes WHERE expira_em <= ?", (agora,))
-            db.execute(
-                "INSERT INTO sessoes (token_hash, usuario, expira_em) VALUES (?, ?, ?)",
-                (_hash_token(token), nome, agora + DURACAO_SESSAO),
-            )
+        self._cookie(COOKIE_CSRF, token, DURACAO_SESSAO)
         return token
 
-    def usuario_da_sessao(self, token):
-        if not token:
-            return None
+    def _csrf(self):
+        return request.get_cookie(COOKIE_CSRF) or self._novo_csrf()
 
-        with closing(self._conectar()) as db:
-            linha = db.execute(
-                "SELECT usuario FROM sessoes WHERE token_hash = ? AND expira_em > ?",
-                (_hash_token(token), int(time.time())),
-            ).fetchone()
-        return linha[0] if linha else None
+    def _validar_csrf(self):
+        esperado = request.get_cookie(COOKIE_CSRF, "").encode("utf-8")
+        enviado = request.forms.get("csrf", "").encode("utf-8")
+        if not esperado or not hmac.compare_digest(esperado, enviado):
+            abort(403, "Formulário expirado. Recarregue a página e tente novamente.")
 
-    def encerrar_sessao(self, token):
-        if token:
-            with closing(self._conectar()) as db, db:
-                db.execute("DELETE FROM sessoes WHERE token_hash = ?", (_hash_token(token),))
+    def _formulario(self, usuario="", erro=""):
+        return template(
+            "login.tpl", template_lookup=[str(VIEWS_ROOT)],
+            usuario=usuario, erro=erro, csrf=self._csrf(),
+        )
+
+    def login(self):
+        response.set_header("Cache-Control", "no-store")
+        token = request.get_cookie(COOKIE_SESSAO)
+        if self.usuarios.usuario_da_sessao(token):
+            return redirect("/foco")
+
+        if request.method == "GET":
+            return self._formulario()
+
+        self._validar_csrf()
+        usuario = request.forms.getunicode("usuario", "").strip().lower()
+        senha = request.forms.getunicode("senha", "")
+        if len(usuario) > 32 or len(senha) > 128 or not self.usuarios.autenticar(usuario, senha):
+            response.status = 401
+            return self._formulario(usuario, "Usuário ou senha inválidos.")
+
+        self.usuarios.encerrar_sessao(token)
+        self._cookie(COOKIE_SESSAO, self.usuarios.abrir_sessao(usuario), DURACAO_SESSAO)
+        self._novo_csrf()
+        return redirect("/foco")
+
+    def proteger(self, acao):
+        @wraps(acao)
+        def protegida(*args, **kwargs):
+            response.set_header("Cache-Control", "no-store")
+            usuario = self.usuarios.usuario_da_sessao(request.get_cookie(COOKIE_SESSAO))
+            if usuario is None:
+                return redirect("/login")
+
+            if request.method == "POST":
+                self._validar_csrf()
+
+            request.environ["foco.contexto"] = {"usuario": usuario, "csrf": self._csrf()}
+            return acao(*args, **kwargs)
+
+        return protegida
+
+    def sair(self):
+        self.usuarios.encerrar_sessao(request.get_cookie(COOKIE_SESSAO))
+        response.delete_cookie(COOKIE_SESSAO, path="/")
+        response.delete_cookie(COOKIE_CSRF, path="/")
+        return redirect("/login")
