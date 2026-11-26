@@ -16,6 +16,7 @@ class Application:
             "foco.tpl",
             template_lookup=[str(VIEWS_ROOT)],
             atividades=self.atividades.listar(),
+            **request.environ["foco.contexto"],
         )
 
     def nova(self):
@@ -67,6 +68,7 @@ class Application:
             erros=erros,
             dias=DIAS,
             atividade_id=atividade_id,
+            **request.environ["foco.contexto"],
         )
 
     def _validar_formulario(self):
