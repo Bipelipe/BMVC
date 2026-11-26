@@ -21,6 +21,13 @@
             <nav aria-label="Navegação">
                 <a href="/foco#plano">Plano semanal</a>
             </nav>
+            <div class="session-controls">
+                <span class="session-user">Conectado como <strong>{{usuario}}</strong></span>
+                <form method="post" action="/sair">
+                    <input type="hidden" name="csrf" value="{{csrf}}">
+                    <button type="submit" class="text-button">Sair</button>
+                </form>
+            </div>
         </div>
     </header>
 
@@ -32,6 +39,7 @@
             % end
 
             <form class="activity-form" method="post" action="{{destino}}">
+                <input type="hidden" name="csrf" value="{{csrf}}">
                 <div class="form-field">
                     <label for="dia">Dia da semana</label>
                     <select id="dia" name="dia" required {{'aria-invalid=true aria-describedby=erro-dia' if 'dia' in erros else ''}}>

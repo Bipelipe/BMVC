@@ -15,6 +15,13 @@
                 <a href="#plano">Plano semanal</a>
                 <a href="#cronometro">Cronômetro</a>
             </nav>
+            <div class="session-controls">
+                <span class="session-user">Conectado como <strong>{{usuario}}</strong></span>
+                <form method="post" action="/sair">
+                    <input type="hidden" name="csrf" value="{{csrf}}">
+                    <button type="submit" class="text-button">Sair</button>
+                </form>
+            </div>
         </div>
     </header>
 
@@ -42,6 +49,7 @@
                                     <div class="activity-actions">
                                         <a href="/atividades/{{atividade.id}}/editar" aria-label="Editar {{atividade.titulo}}">Editar</a>
                                         <form class="activity-remove" method="post" action="/atividades/{{atividade.id}}/excluir">
+                                            <input type="hidden" name="csrf" value="{{csrf}}">
                                             <button type="submit" aria-label="Excluir {{atividade.titulo}}">Excluir</button>
                                         </form>
                                     </div>
