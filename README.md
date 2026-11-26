@@ -1,8 +1,8 @@
-# Foco Time · BMVC II
+# Foco Time · BMVC III
 
-O Foco Time permite organizar uma semana de estudos de Orientação a Objetos.
-Você pode cadastrar, consultar, editar e excluir atividades do plano semanal.
-A página também tem um cronômetro de 25 minutos para acompanhar uma sessão de foco.
+Organize uma semana de estudos de Orientação a Objetos. Depois de entrar, você
+pode cadastrar, consultar, editar e excluir atividades e usar o cronômetro de
+25 minutos. Os usuários cadastrados acessam o mesmo plano semanal.
 
 ## Executar localmente
 
@@ -12,10 +12,11 @@ Requer Python 3.10 ou superior. Na raiz do projeto, crie um ambiente virtual.
 python -m venv .venv
 ```
 
-No Linux ou macOS, instale a dependência e inicie o servidor.
+No Linux ou macOS, instale o Bottle, crie a conta e inicie o servidor.
 
 ```sh
 .venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python criar_usuario.py estudante
 .venv/bin/python route.py
 ```
 
@@ -23,36 +24,29 @@ No Windows, use estes comandos.
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe criar_usuario.py estudante
 .\.venv\Scripts\python.exe route.py
 ```
 
-Abra `http://127.0.0.1:8080/foco`. Para encerrar o servidor, pressione `Ctrl+C`.
-
-O SQLite vem com o Python. Na primeira execução, o servidor cria
-`instance/foco.sqlite3` e cadastra cinco atividades iniciais. As mudanças
-continuam salvas após reiniciar o servidor. O banco local fica fora do Git.
+Escolha uma senha de 12 a 128 caracteres quando o terminal pedir. Crie a conta
+uma vez por banco. Abra `http://127.0.0.1:8080/foco` e entre com o usuário e a
+senha cadastrados. Use o botão **Sair** para encerrar a sessão.
 
 ## Fluxo do BMVC
 
-O Bottle recebe as requisições em `route.py`. O controlador, em
-`app/controllers/application.py`, valida os dados dos formulários e chama
-`Atividades` para consultar ou alterar o banco. As consultas retornam objetos
-Python do modelo `Atividade`, definido em `app/models/atividade.py`.
-Os templates em `app/views/html/` exibem o plano e os formulários e carregam
-o CSS e o JavaScript servidos em `/static/`.
+O Bottle configura as rotas em `route.py`. O controlador `Autenticacao` verifica
+a sessão antes de liberar o plano e as rotas do CRUD. A senha é armazenada
+como hash com sal e as sessões expiram depois de oito horas.
 
-| Método | Rota | Ação |
-|---|---|---|
-| GET | `/foco` | Listar as atividades |
-| GET | `/atividades/nova` | Abrir o formulário de cadastro |
-| POST | `/atividades` | Cadastrar a atividade |
-| GET | `/atividades/<id>/editar` | Abrir o formulário com os dados atuais |
-| POST | `/atividades/<id>/editar` | Salvar as alterações |
-| POST | `/atividades/<id>/excluir` | Excluir a atividade |
+O controlador `Application` entrega ao template os objetos Python do modelo
+`Atividade` e valida os dados do CRUD. O SQLite salva atividades, usuários e
+sessões no arquivo local `instance/foco.sqlite3`. O projeto usa o mesmo banco
+da fase II, com duas tabelas adicionais para autenticação. O arquivo do banco
+fica fora do Git.
 
 ## Demonstração
 
-Cadastre uma atividade, confirme que ela aparece no plano semanal, edite seus
-dados e depois exclua a atividade de teste. Mostre a formatação das páginas e
-use o cronômetro para demonstrar o JavaScript. O vídeo do BMVC II tem limite
-de seis minutos.
+Em uma janela anônima, acesse `/foco` antes do login e veja o redirecionamento.
+Entre com a conta de teste e demonstre o CRUD, o CSS e o cronômetro. Depois de
+sair, tente abrir `/foco` novamente para confirmar o bloqueio. O vídeo do BMVC III
+tem limite de dez minutos.

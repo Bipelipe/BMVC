@@ -211,7 +211,7 @@ h3 { font-size: 1rem; }
     font-size: clamp(2.2rem, 6vw, 3.5rem);
 }
 
-.activity-form { display: grid; gap: 1.2rem; }
+.activity-form, .login-form { display: grid; gap: 1.2rem; }
 .form-panel > .field-error { margin-bottom: 1rem; }
 .form-field { display: grid; gap: .35rem; }
 .form-field label { font-weight: 650; }
@@ -231,3 +231,28 @@ h3 { font-size: 1rem; }
 .form-field [aria-invalid="true"] { border-color: #942e24; }
 .field-error { color: #942e24; }
 .field-hint { font-size: .875rem; color: #435347; }
+
+.session-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .65rem;
+    min-width: 0;
+    font-size: .9rem;
+}
+
+.session-user { overflow-wrap: anywhere; }
+
+.text-button {
+    border: 0;
+    padding: .15rem .25rem;
+    background: transparent;
+    color: #254b38;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: .2em;
+    cursor: pointer;
+}
+
+.login-intro { margin-bottom: 1rem; }
+.login-form .text-button { justify-self: start; }
