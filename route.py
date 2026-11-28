@@ -40,7 +40,8 @@ app.post("/atividades/<atividade_id:int>/excluir", callback=auth.proteger(contro
 
 @app.get("/static/<filepath:path>")
 def assets(filepath):
-    return static_file(filepath, root=str(STATIC_ROOT))
+    mimetype = "text/javascript" if filepath.endswith(".js") else "auto"
+    return static_file(filepath, root=str(STATIC_ROOT), mimetype=mimetype)
 
 
 if __name__ == "__main__":

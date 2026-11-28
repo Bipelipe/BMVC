@@ -7,38 +7,53 @@ endereco.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 let conexao;
 let demoraParaReconectar = 1000;
 let atualizacaoPendente = false;
-let atualizacaoEmCurso = null;
+let atualizando = false;
+let ultimoHtml = lista.innerHTML.trim();
+
+function mostrarEstado(mensagem) {
+    if (estadoConexao.textContent !== mensagem) {
+        estadoConexao.textContent = mensagem;
+    }
+}
 
 function irParaLogin() {
     window.location.replace("/login");
 }
 
 async function consultarLista() {
-    const resposta = await fetch("/atividades/lista", {
-        cache: "no-store",
-        signal: AbortSignal.timeout(10000),
-    });
+    const requisicao = new AbortController();
+    const prazo = window.setTimeout(() => requisicao.abort(), 10000);
 
-    if (resposta.redirected) {
-        irParaLogin();
-        return null;
+    try {
+        const resposta = await fetch("/atividades/lista", {
+            cache: "no-store",
+            signal: requisicao.signal,
+        });
+
+        if (resposta.redirected) {
+            irParaLogin();
+            return null;
+        }
+
+        if (!resposta.ok) {
+            throw new Error("Falha ao carregar a lista de atividades.");
+        }
+
+        return await resposta.text();
+    } finally {
+        window.clearTimeout(prazo);
     }
-
-    if (!resposta.ok) {
-        throw new Error("Falha ao carregar a lista de atividades.");
-    }
-
-    return resposta.text();
 }
 
 function solicitarAtualizacao() {
     atualizacaoPendente = true;
-    atualizacaoEmCurso ??= atualizarLista().finally(() => {
-        atualizacaoEmCurso = null;
-    });
+    if (!atualizando) {
+        atualizarLista();
+    }
 }
 
 async function atualizarLista() {
+    atualizando = true;
     try {
         while (atualizacaoPendente) {
             atualizacaoPendente = false;
@@ -48,33 +63,27 @@ async function atualizarLista() {
                 return;
             }
 
-            if (!atualizacaoPendente && conexao.readyState === WebSocket.OPEN) {
-                if (lista.innerHTML.trim() !== html.trim()) {
-                    lista.innerHTML = html;
-                }
-                if (estadoConexao.textContent !== "Atualização em tempo real ativa") {
-                    estadoConexao.textContent = "Atualização em tempo real ativa";
-                }
+            const proximoHtml = html.trim();
+            if (proximoHtml !== ultimoHtml) {
+                lista.innerHTML = html;
+                ultimoHtml = proximoHtml;
+            }
+
+            if (conexao.readyState === WebSocket.OPEN) {
+                mostrarEstado("Atualização em tempo real ativa");
                 demoraParaReconectar = 1000;
+            } else {
+                mostrarEstado("Reconectando ao WebSocket. A lista atualiza por consulta.");
             }
         }
     } catch {
-        conexao.close();
-    }
-}
-
-async function reconectar() {
-    await atualizacaoEmCurso;
-
-    try {
-        if ((await consultarLista()) === null) {
-            return;
+        mostrarEstado("Falha ao consultar o plano. Reconectando…");
+        if (conexao.readyState === WebSocket.OPEN) {
+            conexao.close();
         }
-    } catch {
-        // A rede pode ainda estar indisponível.
+    } finally {
+        atualizando = false;
     }
-
-    conectar();
 }
 
 function conectar() {
@@ -98,11 +107,17 @@ function conectar() {
             return;
         }
 
-        estadoConexao.textContent = "Conexão interrompida. Reconectando…";
-        window.setTimeout(reconectar, demoraParaReconectar);
+        mostrarEstado("Conexão interrompida. Reconectando…");
+        solicitarAtualizacao();
+        window.setTimeout(conectar, demoraParaReconectar);
         demoraParaReconectar = Math.min(demoraParaReconectar * 2, 10000);
     });
 }
 
-estadoConexao.textContent = "Conectando para receber atualizações…";
+mostrarEstado("Conectando para receber atualizações…");
 conectar();
+window.setInterval(() => {
+    if (conexao.readyState !== WebSocket.OPEN && !atualizando) {
+        solicitarAtualizacao();
+    }
+}, 2000);
