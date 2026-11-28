@@ -8,12 +8,19 @@ VIEWS_ROOT = Path(__file__).resolve().parents[1] / "views" / "html"
 
 
 class Application:
-    def __init__(self, atividades: Atividades):
+    def __init__(self, atividades: Atividades, avisar_atualizacao):
         self.atividades = atividades
+        self.avisar_atualizacao = avisar_atualizacao
 
     def foco(self):
+        return self._plano("foco.tpl")
+
+    def lista(self):
+        return self._plano("atividades_lista.tpl")
+
+    def _plano(self, pagina):
         return template(
-            "foco.tpl",
+            pagina,
             template_lookup=[str(VIEWS_ROOT)],
             atividades=self.atividades.listar(),
             **request.environ["foco.contexto"],
@@ -29,6 +36,7 @@ class Application:
             return self._formulario(valores, erros)
 
         self.atividades.criar(**valores)
+        self.avisar_atualizacao()
         return redirect("/foco")
 
     def editar(self, atividade_id):
@@ -53,11 +61,13 @@ class Application:
 
         if not self.atividades.atualizar(atividade_id, **valores):
             abort(404, "Atividade não encontrada.")
+        self.avisar_atualizacao()
         return redirect("/foco")
 
     def excluir(self, atividade_id):
         if not self.atividades.excluir(atividade_id):
             abort(404, "Atividade não encontrada.")
+        self.avisar_atualizacao()
         return redirect("/foco")
 
     def _formulario(self, valores, erros, atividade_id=None):
