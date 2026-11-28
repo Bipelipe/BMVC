@@ -256,3 +256,9 @@ h3 { font-size: 1rem; }
 
 .login-intro { margin-bottom: 1rem; }
 .login-form .text-button { justify-self: start; }
+
+.live-status {
+    margin-top: .5rem;
+    color: #375a44;
+    font-size: .875rem;
+}

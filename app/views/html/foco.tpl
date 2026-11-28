@@ -6,6 +6,7 @@
     <title>Foco Time | Plano de estudos</title>
     <link rel="stylesheet" href="/static/css/foco.css">
     <script src="/static/js/foco.js" defer></script>
+    <script src="/static/js/tempo_real.js" type="module"></script>
 </head>
 <body>
     <header class="topbar">
@@ -38,28 +39,10 @@
                     <h2 id="plano-titulo">Plano semanal</h2>
                     <a class="action-primary" href="/atividades/nova">Nova atividade</a>
                 </div>
-                % if atividades:
-                    <ul class="activities">
-                        % for atividade in atividades:
-                            <li>
-                                <p class="day">{{atividade.dia}}</p>
-                                <div class="activity-content">
-                                    <h3>{{atividade.titulo}}</h3>
-                                    <p>{{atividade.descricao}}</p>
-                                    <div class="activity-actions">
-                                        <a href="/atividades/{{atividade.id}}/editar" aria-label="Editar {{atividade.titulo}}">Editar</a>
-                                        <form class="activity-remove" method="post" action="/atividades/{{atividade.id}}/excluir">
-                                            <input type="hidden" name="csrf" value="{{csrf}}">
-                                            <button type="submit" aria-label="Excluir {{atividade.titulo}}">Excluir</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </li>
-                        % end
-                    </ul>
-                % else:
-                    <p class="empty-plan">Seu plano está vazio. Crie uma atividade para começar.</p>
-                % end
+                <p class="live-status" id="tempo-real-estado" role="status">Ative o JavaScript para receber atualizações em tempo real.</p>
+                <div id="lista-atividades">
+                    % include("atividades_lista.tpl")
+                </div>
             </section>
 
             <section class="timer" id="cronometro" aria-labelledby="timer-titulo">
