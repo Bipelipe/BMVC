@@ -50,8 +50,9 @@ e observe a lista mudar na segunda. Pressione `Ctrl+C` para parar o servidor.
   conexões válidas. O JavaScript consulta `/atividades/lista` e troca apenas
   a lista do plano, mantendo a contagem do cronômetro.
 - O servidor roda com um processo, que mantém as conexões WebSocket em memória.
-  Quando o navegador reconecta, ele busca a lista atual para recuperar
-  alterações feitas durante a interrupção.
+  Se o WebSocket ficar indisponível, a página consulta a lista a cada dois
+  segundos enquanto tenta reconectar. Quando a conexão volta, a página
+  volta a consultar a lista ao receber avisos.
 
 ## Demonstração
 
