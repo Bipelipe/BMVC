@@ -1,8 +1,9 @@
-# Foco Time · BMVC III
+# Foco Time · BMVC IV
 
-Organize uma semana de estudos de Orientação a Objetos. Depois de entrar, você
-pode cadastrar, consultar, editar e excluir atividades e usar o cronômetro de
-25 minutos. Os usuários cadastrados acessam o mesmo plano semanal.
+O Foco Time reúne um plano semanal de Orientação a Objetos e um cronômetro de
+25 minutos. Usuários autenticados podem cadastrar, consultar, editar e excluir
+atividades do mesmo plano. Uma mudança aparece nas janelas conectadas sem
+recarregar a página.
 
 ## Executar localmente
 
@@ -12,11 +13,12 @@ Requer Python 3.10 ou superior. Na raiz do projeto, crie um ambiente virtual.
 python -m venv .venv
 ```
 
-No Linux ou macOS, instale o Bottle, crie a conta e inicie o servidor.
+No Linux ou macOS, use os comandos abaixo.
 
 ```sh
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python criar_usuario.py estudante
+.venv/bin/python criar_usuario.py observador
 .venv/bin/python route.py
 ```
 
@@ -25,28 +27,35 @@ No Windows, use estes comandos.
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe criar_usuario.py estudante
+.\.venv\Scripts\python.exe criar_usuario.py observador
 .\.venv\Scripts\python.exe route.py
 ```
 
-Escolha uma senha de 12 a 128 caracteres quando o terminal pedir. Crie a conta
-uma vez por banco. Abra `http://127.0.0.1:8080/foco` e entre com o usuário e a
-senha cadastrados. Use o botão **Sair** para encerrar a sessão.
+Crie cada conta uma vez por banco e escolha uma senha de 12 a 128 caracteres
+quando o terminal pedir. A segunda conta é útil para demonstrar a
+sincronização em outra janela. O banco SQLite fica em `instance/foco.sqlite3`.
+As contas e atividades da fase III podem ser usadas no mesmo banco.
 
-## Fluxo do BMVC
+Abra `http://127.0.0.1:8080/foco` em uma janela normal e em uma janela anônima
+e entre nas duas. Cadastre, edite e exclua uma atividade na primeira janela
+e observe a lista mudar na segunda. Pressione `Ctrl+C` para parar o servidor.
 
-O Bottle configura as rotas em `route.py`. O controlador `Autenticacao` verifica
-a sessão antes de liberar o plano e as rotas do CRUD. A senha é armazenada
-como hash com sal e as sessões expiram depois de oito horas.
+## Como funciona
 
-O controlador `Application` entrega ao template os objetos Python do modelo
-`Atividade` e valida os dados do CRUD. O SQLite salva atividades, usuários e
-sessões no arquivo local `instance/foco.sqlite3`. O projeto usa o mesmo banco
-da fase II, com duas tabelas adicionais para autenticação. O arquivo do banco
-fica fora do Git.
+- O Uvicorn serve HTTP e WebSocket na mesma porta. O a2wsgi encaminha as
+  requisições HTTP ao Bottle.
+- O servidor valida a origem e a sessão ao abrir o WebSocket
+  `/ws/atividades`. A sessão também é verificada enquanto a conexão está ativa.
+- Após salvar uma alteração no SQLite, o controlador envia um aviso às
+  conexões válidas. O JavaScript consulta `/atividades/lista` e troca apenas
+  a lista do plano, mantendo a contagem do cronômetro.
+- O servidor roda com um processo, que mantém as conexões WebSocket em memória.
+  Quando o navegador reconecta, ele busca a lista atual para recuperar
+  alterações feitas durante a interrupção.
 
 ## Demonstração
 
-Em uma janela anônima, acesse `/foco` antes do login e veja o redirecionamento.
-Entre com a conta de teste e demonstre o CRUD, o CSS e o cronômetro. Depois de
-sair, tente abrir `/foco` novamente para confirmar o bloqueio. O vídeo do BMVC III
-tem limite de dez minutos.
+Mostre o acesso restrito antes do login e o CRUD em uma janela autenticada.
+Mantenha a segunda janela visível para mostrar as alterações chegando sem
+recarregar a página. Demonstre os controles do cronômetro, o layout responsivo
+e o bloqueio do plano após sair. O vídeo tem limite de 15 minutos.
